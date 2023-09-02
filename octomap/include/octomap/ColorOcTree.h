@@ -51,7 +51,7 @@ namespace octomap {
     
     class Color {
     public:
-    Color() : r(255), g(255), b(255) {}
+    Color() : r(0), g(0), b(0) {}
     Color(uint8_t _r, uint8_t _g, uint8_t _b) 
       : r(_r), g(_g), b(_b) {}
       inline bool operator== (const Color &other) const {

@@ -51,6 +51,106 @@ namespace octomap {
     return s;
   }
 
+  /*
+  // Assuming octomap::ColorOcTreeNode::Color has fields r, g, b
+  inline bool operator<(const octomap::ColorOcTreeNode::Color& lhs, const octomap::ColorOcTreeNode::Color& rhs) {
+    if (lhs.r != rhs.r) return lhs.r < rhs.r;
+    if (lhs.g != rhs.g) return lhs.g < rhs.g;
+    return lhs.b < rhs.b;
+  }
+
+  struct ColorCompare {
+    bool operator()(const octomap::ColorOcTreeNode::Color& lhs, const octomap::ColorOcTreeNode::Color& rhs) const {
+      if (lhs.r != rhs.r) return lhs.r < rhs.r;
+      if (lhs.g != rhs.g) return lhs.g < rhs.g;
+      return lhs.b < rhs.b;
+    }
+  };
+
+  std::map<octomap::ColorOcTreeNode::Color, int, ColorCompare> colorCount;
+
+  std::vector<ColorOcTreeNode*> getNearestNeighbors(ColorOcTreeNode* node) {
+    std::vector<ColorOcTreeNode*> neighbors;
+
+    // First, try to traverse upwards to the parent.
+    ColorOcTreeNode* parent = node->getParent();  // Adapt this to your actual API
+    
+    if (parent != nullptr && parent->isColorSet()) {
+      neighbors.push_back(parent);
+      // Check parent's children
+      for (int i = 0; i < 8; i++) {
+        ColorOcTreeNode* sibling = static_cast<ColorOcTreeNode*>(parent->getChild(i));  // Adapt this to your actual API
+        if (sibling != nullptr && sibling != node && sibling->isColorSet()) {
+          neighbors.push_back(sibling);
+        }
+      }
+    }
+    
+    // Next, traverse downwards to all children (only if the node is not a leaf)
+    if (!node->isLeaf()) {
+      for (int i = 0; i < 8; i++) {
+        ColorOcTreeNode* child = static_cast<ColorOcTreeNode*>(node->getChild(i));  // Adapt this to your actual API
+        if (child != nullptr && child->isColorSet()) {
+          neighbors.push_back(child);
+        }
+      }
+    }
+    
+    return neighbors;
+  }
+
+  ColorOcTreeNode::Color ColorOcTreeNode::getAverageChildColor() const {
+    int mr = 0;
+    int mg = 0;
+    int mb = 0;
+    int c = 0;
+
+    if (children != NULL){
+      for (int i=0; i<8; i++) {
+        ColorOcTreeNode* child = static_cast<ColorOcTreeNode*>(children[i]);
+
+        if (child != NULL && child->isColorSet()) {
+          mr += child->getColor().r;
+          mg += child->getColor().g;
+          mb += child->getColor().b;
+          ++c;
+        }
+      }
+    }
+
+    if (c > 0) {
+      mr /= c;
+      mg /= c;
+      mb /= c;
+      return Color((uint8_t) mr, (uint8_t) mg, (uint8_t) mb);
+    }
+    else {
+      // Fetch the nearest neighbors
+      std::vector<ColorOcTreeNode*> nearestNeighbors = getNearestNeighbors();  // You'll need to implement this
+
+      std::map<Color, int> colorCount;  // Count the occurrence of each color
+      for (ColorOcTreeNode* neighbor : nearestNeighbors) {
+        if (neighbor && neighbor->isColorSet()) {
+          Color color = neighbor->getColor();
+          colorCount[color]++;  // Assuming Color has implemented operator< for use as map key
+        }
+      }
+
+      // Find the mode color
+      int maxCount = 0;
+      Color modeColor(0, 0, 0); // Default to black
+      for (auto& entry : colorCount) {
+        if (entry.second > maxCount) {
+          maxCount = entry.second;
+          modeColor = entry.first;
+        }
+      }
+
+      return modeColor;
+    }
+  }
+  */
+ 
   ColorOcTreeNode::Color ColorOcTreeNode::getAverageChildColor() const {
     int mr = 0;
     int mg = 0;
@@ -77,10 +177,10 @@ namespace octomap {
       return Color((uint8_t) mr, (uint8_t) mg, (uint8_t) mb);
     }
     else { // no child had a color other than white
-      return Color(255, 255, 255);
+      // Should get nearest neighbor
+      return Color(0, 0, 0);
     }
   }
-
 
   void ColorOcTreeNode::updateColorChildren() {
     color = getAverageChildColor();
@@ -170,11 +270,11 @@ namespace octomap {
         ColorOcTreeNode::Color prev_color = n->getColor();
         double node_prob = n->getOccupancy();
         uint8_t new_r = (uint8_t) ((double) prev_color.r * node_prob
-                                               +  (double) r * (0.99-node_prob));
+                                               +  (double) r * (0.5-node_prob));
         uint8_t new_g = (uint8_t) ((double) prev_color.g * node_prob
-                                               +  (double) g * (0.99-node_prob));
+                                               +  (double) g * (0.5-node_prob));
         uint8_t new_b = (uint8_t) ((double) prev_color.b * node_prob
-                                               +  (double) b * (0.99-node_prob));
+                                               +  (double) b * (0.5-node_prob));
         n->setColor(new_r, new_g, new_b);
       }
       else {
